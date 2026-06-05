@@ -1,0 +1,1 @@
+# Simulador_de_Planificaci-n_de_Procesos_del_Sistema_Operativo
