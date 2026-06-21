@@ -1,0 +1,7 @@
+# ID,Nombre,Tipo,Llegada,Rafaga,Prioridad,Gestiones
+1,Juan Perez,Rojo,0,10,5,2
+2,Maria Gomez,Amarillo,2,8,4,1
+3,Carlos Ruiz,Verde,1,6,2,1
+4,Ana Martinez,Cita,3,4,1,2
+5,Luis Torres,Seguimiento,5,5,0,1
+28,Madeline Cordero Ruiz,Amarillo,15,14,4,1
