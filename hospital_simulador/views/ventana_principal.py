@@ -3,13 +3,21 @@ from tkinter import ttk, messagebox
 from views.ventana_registro import VentanaRegistro
 from views.ventana_eliminar import VentanaEliminar
 from views.ventana_tiquetes import VentanaTiquetes
+from views.ventana_metricas import VentanaMetricas
+from views.ventana_comparacion import VentanaComparacion
+from controllers.simulation_step_controller import SimulationStepController
+from views.ventana_simulacion_paso import VentanaSimulacionPaso
+
+from views.ventana_gantt import VentanaGantt
 from styles import EstilosHospital
 
 class VentanaPrincipal:
-    def __init__(self, root, gestor, archivo_actual):
+    def __init__(self, root, gestor, archivo_actual, simulation, comparador):
         self.root = root
         self.gestor = gestor
         self.archivo_actual = archivo_actual
+        self.simulation = simulation
+        self.comparador = comparador
         self.tree = None
         self.status_bar = None
         self.lbl_total = None
@@ -17,16 +25,26 @@ class VentanaPrincipal:
         self.lbl_atencion = None
         self.lbl_finalizados = None
         
+        self.config_mlq_vars = {
+        "Rojo": tk.StringVar(value="FIFO"),
+        "Amarillo": tk.StringVar(value="SJF"),
+        "Embarazada": tk.StringVar(value="RR"),
+        "Verde": tk.StringVar(value="FIFO"),
+        "Cita": tk.StringVar(value="SJF"),
+        "Seguimiento": tk.StringVar(value="RR")
+        }
+
         self.crear_interfaz()
     
     def crear_interfaz(self):
-        EstilosHospital.crear_barra_superior(self.root)
         self.crear_menu_principal()
         self.crear_lista_pacientes()
         self.crear_panel_estadisticas()
         self.crear_barra_estado()
-    
+            
+        
     def crear_menu_principal(self):
+
         menu_frame = tk.LabelFrame(
             self.root,
             text="Panel de Control",
@@ -37,7 +55,59 @@ class VentanaPrincipal:
             pady=10
         )
         menu_frame.pack(fill="x", padx=10, pady=5)
-        
+
+        canvas = tk.Canvas(
+            menu_frame,
+            height=300,
+            bg=EstilosHospital.COLORES["fondo"],
+            highlightthickness=0
+        )
+        canvas.pack(fill="x", expand=True)
+
+        scrollbar_x = tk.Scrollbar(
+            menu_frame,
+            orient="horizontal",
+            command=canvas.xview
+        )
+        scrollbar_x.pack(fill="x")
+
+        canvas.configure(
+            xscrollcommand=scrollbar_x.set
+        )
+
+        scroll_frame = tk.Frame(
+            canvas,
+            bg=EstilosHospital.COLORES["fondo"]
+        )
+
+        window = canvas.create_window(
+            (0, 0),
+            window=scroll_frame,
+            anchor="nw"
+        )
+
+        def _on_configure(event):
+            canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+
+        scroll_frame.bind("<Configure>", _on_configure)
+
+        self.crear_config_mlq(scroll_frame)
+
+        separador = tk.Frame(
+            scroll_frame,
+            height=10,
+            bg=EstilosHospital.COLORES["fondo"]
+        )
+        separador.pack(fill="x")
+
+        botones_frame = tk.Frame(
+            scroll_frame,
+            bg=EstilosHospital.COLORES["fondo"]
+        )
+        botones_frame.pack(fill="x", pady=5)
+
         botones = [
             ("Registrar Paciente", self.abrir_registro),
             ("Cargar desde TXT", self.cargar_txt),
@@ -45,19 +115,48 @@ class VentanaPrincipal:
             ("Eliminar Paciente", self.abrir_eliminar),
             ("Actualizar Lista", self.actualizar_lista),
             ("Ver Tiquetes", self.abrir_tiquetes),
+            ("Simulación MLQ", self.ejecutar_mlq),
+            ("Comparar Algoritmos", self.abrir_comparacion),
+            ("Ver Gantt", self.abrir_gantt),
+            ("Simulación Paso a Paso", self.abrir_simulacion_paso),
             ("Limpiar Sistema", self.limpiar_sistema),
             ("Salir", self.root.quit)
         ]
-        
+
         for texto, comando in botones:
+
             if "Eliminar" in texto or "Limpiar" in texto:
-                btn = EstilosHospital.crear_boton_eliminar(menu_frame, texto, comando)
+                btn = EstilosHospital.crear_boton_eliminar(
+                    botones_frame,
+                    texto,
+                    comando
+                )
+
             elif "Salir" in texto:
-                btn = EstilosHospital.crear_boton_gris(menu_frame, texto, comando)
+                btn = EstilosHospital.crear_boton_gris(
+                    botones_frame,
+                    texto,
+                    comando
+                )
+
             else:
-                btn = EstilosHospital.crear_boton_rojo(menu_frame, texto, comando)
-            btn.pack(side="left", padx=4)
-    
+                btn = EstilosHospital.crear_boton_rojo(
+                    botones_frame,
+                    texto,
+                    comando
+                )
+
+            btn.pack(
+                side="left",
+                padx=4,
+                pady=5
+            )
+
+        canvas.update_idletasks()
+
+        canvas.configure(
+            scrollregion=canvas.bbox("all")
+        )
     def crear_lista_pacientes(self):
         list_frame = tk.LabelFrame(
             self.root,
@@ -76,7 +175,7 @@ class VentanaPrincipal:
         columnas = ("ID", "Nombre", "Tipo", "Prioridad", "Llegada", "Rafaga",
                    "Restante", "Gestiones", "Tiquete", "Estado")
         
-        self.tree = ttk.Treeview(table_frame, columns=columnas, show="headings", height=18)
+        self.tree = ttk.Treeview(table_frame, columns=columnas, show="headings", height=8)
         
         anchos = [60, 180, 120, 80, 80, 100, 100, 80, 100, 120]
         for col, ancho in zip(columnas, anchos):
@@ -290,3 +389,131 @@ class VentanaPrincipal:
             self.actualizar_lista()
             messagebox.showinfo("Exito", "Sistema limpiado correctamente.\nLos cambios han sido guardados.")
             self.status_bar.config(text="Sistema limpiado - Todos los pacientes eliminados")
+
+
+    def ejecutar_mlq(self):
+
+        configuracion = {
+            cola: var.get()
+            for cola, var in self.config_mlq_vars.items()
+        }
+
+        resultado = self.simulation.ejecutar(
+            configuracion,
+            quantum=2
+        )
+
+        if not resultado or "error" in resultado:
+            messagebox.showerror("Error", resultado["error"])
+            return
+
+        self.abrir_gantt(resultado)
+        self.abrir_metricas(resultado)
+
+        messagebox.showinfo(
+            "MLQ Ejecutado",
+            f"Pacientes procesados: {len(resultado['pacientes'])}\n"
+            f"Configuración dinámica aplicada"
+        )
+
+
+    def comparar_algoritmos(self):
+
+        resultado = self.root.master.comparador.ejecutar_comparacion(
+        self.gestor.listar_pacientes(),
+        quantum=2
+        )
+
+        resumen = resultado["comparacion"]
+
+        mensaje = "COMPARACIÓN DE ALGORITMOS\n\n"
+
+        for alg, data in resumen.items():
+
+            mensaje += f"=== {alg} ===\n"
+            mensaje += f"Espera promedio: {data['promedio_espera']:.2f}\n"
+            mensaje += f"Retorno promedio: {data['promedio_retorno']:.2f}\n"
+            mensaje += f"CPU: {data['cpu_utilizacion']:.2f}%\n"
+            mensaje += f"Tiempo total: {data['tiempo_total']}\n\n"
+        
+
+        messagebox.showinfo("Comparación de Algoritmos", mensaje)
+
+    def abrir_gantt(self, resultado=None):
+
+        # si no viene resultado, ejecuta MLQ
+        if resultado is None:
+            resultado = self.simulation.ejecutar(
+                configuracion={
+                    "Rojo": "FIFO",
+                    "Amarillo": "SJF",
+                    "Embarazada": "RR",
+                    "Verde": "FIFO",
+                    "Cita": "SJF",
+                    "Seguimiento": "RR"
+                },
+                quantum=2
+            )
+
+        if not resultado or "error" in resultado:
+            messagebox.showerror("Error", "No hay datos para Gantt")
+            return
+
+        VentanaGantt(self.root, resultado["gantt"])
+
+    def abrir_metricas(self, resultado):
+
+        if not resultado or "metricas" not in resultado:
+            print("No hay métricas disponibles")
+            return
+
+        VentanaMetricas(self.root, resultado["metricas"])
+
+    def abrir_comparacion(self):
+
+        pacientes = self.gestor.listar_pacientes()
+
+        if not pacientes:
+            print("No hay pacientes")
+            return
+
+        resultado = self.comparador.ejecutar_comparacion(pacientes)
+
+        VentanaComparacion(self.root, resultado)
+
+    def abrir_simulacion_paso(self):
+
+        controller = SimulationStepController(self.gestor)
+
+        VentanaSimulacionPaso(self.root, controller)
+
+    def crear_config_mlq(self, parent):
+
+        frame = tk.LabelFrame(
+            parent,
+            text="Configuración MLQ",
+            bg=EstilosHospital.COLORES["fondo"]
+        )
+        frame.pack(fill="x", padx=10, pady=5)
+
+        opciones = ["FIFO", "SJF", "RR"]
+
+        for cola, var in self.config_mlq_vars.items():
+
+            fila = tk.Frame(frame, bg=EstilosHospital.COLORES["fondo"])
+            fila.pack(side="top", anchor="w", padx=10, pady=2)
+
+            tk.Label(
+                fila,
+                text=cola,
+                bg=EstilosHospital.COLORES["fondo"]
+            ).pack(side="left")
+
+            combo = ttk.Combobox(
+                fila,
+                textvariable=var,
+                values=opciones,
+                state="readonly",
+                width=8
+            )
+            combo.pack(side="left", padx=5)
