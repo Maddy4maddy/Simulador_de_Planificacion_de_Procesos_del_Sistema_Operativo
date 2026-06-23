@@ -11,7 +11,7 @@ class App:
     def __init__(self):
 
         self.root = tk.Tk()
-        self.root.title("Sistema de Gestion Hospitalaria - Centro de Emergencias")
+        self.root.title("Sistema de Gestion Hospitalaria - Hospital Dr. Maximiliano Peralta Jiménez")
         self.root.geometry("1200x750")
         self.root.resizable(True, True)
 
@@ -40,7 +40,6 @@ class App:
             if os.path.exists(self.archivo_actual):
                 self.gestor.cargar_desde_txt(self.archivo_actual)
 
-                # 🔵 PASO 2 (DEBUG AQUÍ)
                 print("DEBUG MAIN - pacientes cargados:", len(self.gestor.pacientes))
 
         except Exception:
