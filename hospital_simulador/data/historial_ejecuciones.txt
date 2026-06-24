@@ -1,0 +1,3 @@
+# ejecucion_id|fecha|algoritmo|total_pacientes|prom_espera|prom_retorno|cpu_utilizacion|tiempo_total
+EJC-20260623-214700|2026-06-23 21:47:00|MLQ|6|26.33|34.17|74.60|63
+EJC-20260623-214714|2026-06-23 21:47:14|MLQ|6|26.33|34.17|74.60|63

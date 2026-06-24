@@ -80,5 +80,6 @@ class ComparadorController:
             "promedio_espera": metricas["promedio_espera"],
             "promedio_retorno": metricas["promedio_retorno"],
             "cpu_utilizacion": metricas["cpu_utilizacion"],
-            "tiempo_total": max(g[2] for g in gantt)
+            "tiempo_total": max(g[2] for g in gantt),
+             "gantt": gantt
         }
