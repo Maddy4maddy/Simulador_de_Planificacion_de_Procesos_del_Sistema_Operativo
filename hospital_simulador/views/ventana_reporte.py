@@ -6,6 +6,8 @@ from styles import EstilosHospital
 class VentanaReporte:
 
     def __init__(self, root, historial_controller):
+        #Inicializa la ventana del reporte y establece la conexión
+        #con el controlador encargado de gestionar el historial.
         self.historial = historial_controller
 
         self.ventana = tk.Toplevel(root)
@@ -16,10 +18,12 @@ class VentanaReporte:
         self.crear_ui()
 
     def crear_ui(self):
+        #Construye toda la interfaz del reporte histórico.
         EstilosHospital.crear_header(self.ventana, "REPORTE HISTÓRICO GLOBAL")
 
         stats = self.historial.calcular_estadisticas_historicas()
 
+    #Sección que presenta los indicadores generales obtenidos a partir de todas las ejecuciones registradas.
         frame_resumen = tk.LabelFrame(
             self.ventana,
             text="Resumen general",
@@ -39,6 +43,7 @@ class VentanaReporte:
             ("Utilización de CPU promedio", f"{stats['prom_cpu_global']:.2f} %"),
         ]
 
+        #Genera dinámicamente cada fila de información del resumen.
         for etiqueta, valor in datos_resumen:
             fila = tk.Frame(frame_resumen, bg=EstilosHospital.COLORES["fondo"])
             fila.pack(fill="x", pady=3)
@@ -61,6 +66,7 @@ class VentanaReporte:
                 fg=EstilosHospital.COLORES["rojo_principal"]
             ).pack(side="left")
 
+         #Muestra la cantidad total de gestiones realizadas por cada tipo de paciente registrado.
         frame_gestiones = tk.LabelFrame(
             self.ventana,
             text="Gestiones por tipo de paciente",
@@ -72,6 +78,7 @@ class VentanaReporte:
         )
         frame_gestiones.pack(fill="both", expand=True, padx=20, pady=(0, 15))
 
+        #Tabla que organiza y presenta las gestiones acumuladas para cada categoría de paciente.
         cols = ("Tipo de Paciente", "Total Gestiones")
         tree = ttk.Treeview(frame_gestiones, columns=cols, show="headings", height=7)
         tree.heading("Tipo de Paciente", text="TIPO DE PACIENTE")

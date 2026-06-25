@@ -8,6 +8,8 @@ class HistorialController:
     RUTA_EJECUCIONES = "data/historial_ejecuciones.txt"
 
     def __init__(self):
+        #Crea la carpeta de almacenamiento si no existe e inicializa
+        #los archivos de historial con sus respectivos encabezados.
         os.makedirs("data", exist_ok=True)
         self._inicializar_archivo(
             self.RUTA_PACIENTES,
@@ -19,6 +21,7 @@ class HistorialController:
         )
 
     def guardar_simulacion(self, pacientes, metricas, algoritmo="MLQ"):
+        #Genera un identificador único para la ejecución y almacena la información de los pacientes.
         ejecucion_id = datetime.now().strftime("EJC-%Y%m%d-%H%M%S")
         fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -42,6 +45,7 @@ class HistorialController:
         return ejecucion_id
 
     def obtener_ejecuciones(self):
+        #Recupera todas las ejecuciones almacenadas en el historial.
         return self._leer_archivo(
             self.RUTA_EJECUCIONES,
             ["ejecucion_id", "fecha", "algoritmo", "total_pacientes",
@@ -49,6 +53,8 @@ class HistorialController:
         )
 
     def obtener_pacientes_de_ejecucion(self, ejecucion_id):
+        #Obtiene únicamente los pacientes pertenecientes a una
+        #ejecución específica utilizando su identificador.
         todos = self._leer_archivo(
             self.RUTA_PACIENTES,
             ["ejecucion_id", "fecha", "id_paciente", "nombre", "tipo",
@@ -58,6 +64,7 @@ class HistorialController:
         return [r for r in todos if r["ejecucion_id"] == ejecucion_id]
 
     def obtener_todos_los_pacientes(self):
+        #Recupera todos los registros de pacientes almacenados
         return self._leer_archivo(
             self.RUTA_PACIENTES,
             ["ejecucion_id", "fecha", "id_paciente", "nombre", "tipo",
@@ -66,6 +73,7 @@ class HistorialController:
         )
 
     def calcular_estadisticas_historicas(self):
+         #Calcula estadísticas globales a partir de todas las ejecuciones registradas.
         ejecuciones = self.obtener_ejecuciones()
         pacientes = self.obtener_todos_los_pacientes()
 
@@ -99,11 +107,13 @@ class HistorialController:
         }
 
     def _inicializar_archivo(self, ruta, header):
+        #Verifica si el archivo existe; de no ser así, lo crea e inserta.
         if not os.path.exists(ruta):
             with open(ruta, "w", encoding="utf-8") as f:
                 f.write(header)
 
     def _leer_archivo(self, ruta, columnas):
+        #Convierte cada registro en un diccionario para facilitar su manipulación dentro de la aplicación.
         registros = []
         if not os.path.exists(ruta):
             return registros

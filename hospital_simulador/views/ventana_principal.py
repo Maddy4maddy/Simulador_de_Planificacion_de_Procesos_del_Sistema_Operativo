@@ -16,6 +16,7 @@ from styles import EstilosHospital
 
 class VentanaPrincipal:
     def __init__(self, root, gestor, archivo_actual, simulation, comparador, historial):
+        #Inicializa la ventana principal.
         self.root = root
         self.gestor = gestor
         self.archivo_actual = archivo_actual
@@ -41,12 +42,14 @@ class VentanaPrincipal:
         self.crear_interfaz()
 
     def crear_interfaz(self):
+        #Construye la interfaz principal del sistema.
         self.crear_menu_principal()
         self.crear_lista_pacientes()
         self.crear_panel_estadisticas()
         self.crear_barra_estado()
 
     def crear_menu_principal(self):
+         #Crea el panel principal de acciones del sistema
         menu_frame = tk.LabelFrame(
             self.root,
             text="Panel de Control",
@@ -123,6 +126,7 @@ class VentanaPrincipal:
         canvas.configure(scrollregion=canvas.bbox("all"))
 
     def crear_lista_pacientes(self):
+        #Construye la tabla principal donde se muestran todos los pacientes registrados.
         list_frame = tk.LabelFrame(
             self.root,
             text="Pacientes Registrados",
@@ -215,6 +219,7 @@ class VentanaPrincipal:
             ).pack(side="left", padx=2)
 
     def crear_barra_estado(self):
+        #Genera la barra inferior utilizada para informar acciones y eventos importantes del sistema.
         self.status_bar = tk.Label(
             self.root,
             text="Sistema listo",
@@ -228,6 +233,7 @@ class VentanaPrincipal:
         self.status_bar.pack(side="bottom", fill="x")
 
     def formatear_tiempo(self, minutos):
+         #Convierte valores de tiempo expresados en minutos.
         if minutos < 60:
             return f"{minutos} min"
         elif minutos == 60:
@@ -241,6 +247,7 @@ class VentanaPrincipal:
                 return f"{horas}h {resto}min"
 
     def actualizar_lista(self):
+        #Actualiza la información mostrada en la tabla de pacientes
         for item in self.tree.get_children():
             self.tree.delete(item)
 
@@ -280,6 +287,7 @@ class VentanaPrincipal:
         self.actualizar_estadisticas()
 
     def actualizar_estadisticas(self):
+        #Recalcula y actualiza los indicadores generales mostrados en el panel de estadísticas.
         total = self.gestor.contar_pacientes()
         en_espera   = sum(1 for p in self.gestor.pacientes if p.estado == "Espera")
         en_atencion = sum(1 for p in self.gestor.pacientes if p.estado == "Atencion")
@@ -301,6 +309,7 @@ class VentanaPrincipal:
         VentanaTiquetes(self.root, self.gestor)
 
     def cargar_txt(self):
+        #Carga pacientes desde un archivo de texto
         from tkinter import filedialog
         ruta = filedialog.askopenfilename(
             title="Seleccionar archivo de pacientes",
@@ -333,6 +342,7 @@ class VentanaPrincipal:
                 messagebox.showerror("Error", str(e))
 
     def limpiar_sistema(self):
+        #Elimina todos los pacientes registrados y actualiza.
         if messagebox.askyesno(
             "Confirmar",
             "Esta seguro de eliminar TODOS los pacientes del sistema?\n\nEsta accion no se puede deshacer."
@@ -344,6 +354,7 @@ class VentanaPrincipal:
             self.status_bar.config(text="Sistema limpiado - Todos los pacientes eliminados")
 
     def ejecutar_mlq(self):
+         #Ejecuta la simulación utilizando el algoritmo
         configuracion = {
             cola: var.get()
             for cola, var in self.config_mlq_vars.items()
@@ -374,6 +385,7 @@ class VentanaPrincipal:
         )
 
     def abrir_gantt(self, resultado=None):
+        #Genera y muestra el diagrama de Gantt 
         if resultado is None:
             resultado = self.simulation.ejecutar(
                 configuracion={
@@ -399,6 +411,7 @@ class VentanaPrincipal:
         VentanaMetricas(self.root, resultado["metricas"])
 
     def abrir_comparacion(self):
+         #Ejecuta una comparación entre diferentes algoritmos
         pacientes = self.gestor.listar_pacientes()
         if not pacientes:
             messagebox.showwarning("Aviso", "No hay pacientes registrados.")
@@ -407,6 +420,7 @@ class VentanaPrincipal:
         VentanaComparacion(self.root, resultado)
 
     def abrir_simulacion_paso(self):
+    #Inicia la simulación paso a paso permitiendo observar el comportamiento detallado del sistema.
         controller = SimulationStepController(self.gestor)
         VentanaSimulacionPaso(self.root, controller)
 
@@ -420,6 +434,7 @@ class VentanaPrincipal:
         VentanaReporteSimulacion(self.root,resultado)
 
     def crear_config_mlq(self, parent):
+        #Construye el panel de configuración dinámica de MLQ
         frame = tk.LabelFrame(
             parent,
             text="Configuración MLQ",

@@ -5,7 +5,7 @@ from styles import EstilosHospital
 class VentanaReporteSimulacion:
 
     def __init__(self, root, resultado):
-
+# Inicializa la ventana del reporte y almacena los resultados producidos por la simulación.
         self.resultado = resultado
 
         self.ventana = tk.Toplevel(root)
@@ -18,6 +18,7 @@ class VentanaReporteSimulacion:
         self.crear_ui()
 
     def crear_ui(self):
+        #Construye la interfaz gráfica del reporte, mostrando las métricas
 
         EstilosHospital.crear_header(
             self.ventana,
@@ -28,6 +29,8 @@ class VentanaReporteSimulacion:
 
         pacientes = self.resultado["pacientes"]
 
+        #Organiza los indicadores principales que serán
+        #mostrados al usuario en forma de resumen.
         datos = [
             ("Pacientes atendidos", len(pacientes)),
             ("Tiempo promedio de espera", f"{metricas['espera']:.2f}"),
@@ -36,6 +39,7 @@ class VentanaReporteSimulacion:
             ("Tiempo total", metricas["tiempo_total"])
         ]
 
+        #Crea el contenedor principal donde se presentan todas las métricas del reporte.
         frame = tk.Frame(
             self.ventana,
             bg="white"
@@ -47,6 +51,7 @@ class VentanaReporteSimulacion:
             pady=20
         )
 
+        #Genera dinámicamente una fila para cada métrica calculada durante la simulación.
         for texto, valor in datos:
 
             fila = tk.Frame(

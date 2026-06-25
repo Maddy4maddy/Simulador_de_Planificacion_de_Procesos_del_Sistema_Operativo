@@ -6,6 +6,8 @@ from styles import EstilosHospital
 class VentanaHistorial:
 
     def __init__(self, root, historial_controller):
+         #Inicializa la ventana secundaria y establece la referencia
+        #al controlador del historial para consultar la información almacenada.
         self.historial = historial_controller
 
         self.ventana = tk.Toplevel(root)
@@ -17,6 +19,7 @@ class VentanaHistorial:
         self.cargar_ejecuciones()
 
     def crear_ui(self):
+        #Construye toda la interfaz gráfica de la ventana.
         EstilosHospital.crear_header(self.ventana, "HISTORIAL DE EJECUCIONES")
 
         frame_superior = tk.Frame(self.ventana, bg=EstilosHospital.COLORES["fondo"])
@@ -30,6 +33,7 @@ class VentanaHistorial:
             fg=EstilosHospital.COLORES["texto_oscuro"]
         ).pack(anchor="w")
 
+         #Tabla que muestra el resumen de todas las ejecuciones registradas.
         cols_ejec = ("ID Ejecución", "Fecha", "Algoritmo", "Pacientes",
                      "Prom. Espera", "Prom. Retorno", "CPU %")
         self.tree_ejec = ttk.Treeview(frame_superior, columns=cols_ejec, show="headings", height=7)
@@ -44,6 +48,7 @@ class VentanaHistorial:
         self.tree_ejec.pack(side="left", fill="both", expand=True)
         scroll_ejec.pack(side="right", fill="y")
 
+          #Evento que permite mostrar el detalle de una ejecución.
         self.tree_ejec.bind("<<TreeviewSelect>>", self.mostrar_detalle)
 
         frame_inferior = tk.Frame(self.ventana, bg=EstilosHospital.COLORES["fondo"])
@@ -57,6 +62,7 @@ class VentanaHistorial:
             fg=EstilosHospital.COLORES["texto_oscuro"]
         ).pack(anchor="w")
 
+        # Tabla destinada a mostrar los pacientes pertenecientes a la ejecución seleccionada.
         cols_pac = ("ID", "Nombre", "Tipo", "Prioridad", "Gestiones",
                     "T. Espera", "T. Retorno")
         self.tree_pac = ttk.Treeview(frame_inferior, columns=cols_pac, show="headings", height=7)
@@ -71,6 +77,7 @@ class VentanaHistorial:
         self.tree_pac.pack(side="left", fill="both", expand=True)
         scroll_pac.pack(side="right", fill="y")
 
+        #Botón que permite cerrar la ventana del historial.
         btn_frame = tk.Frame(self.ventana, bg=EstilosHospital.COLORES["fondo"])
         btn_frame.pack(pady=8)
 
@@ -91,6 +98,7 @@ class VentanaHistorial:
         ).pack()
 
     def cargar_ejecuciones(self):
+        #Limpia la tabla de ejecuciones y carga nuevamente todos los registros almacenados en el historial.
         for item in self.tree_ejec.get_children():
             self.tree_ejec.delete(item)
 
@@ -106,6 +114,7 @@ class VentanaHistorial:
             ))
 
     def mostrar_detalle(self, event):
+        #Obtiene la ejecución seleccionada y muestra en la tabla inferior todos los pacientes asociados.
         seleccion = self.tree_ejec.selection()
         if not seleccion:
             return
