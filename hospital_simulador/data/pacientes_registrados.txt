@@ -5,3 +5,5 @@
 4,Ana Martinez,Cita,3,4,1,2
 5,Luis Torres,Seguimiento,5,5,0,1
 28,Madeline Cordero Ruiz,Amarillo,15,14,4,1
+6,Monica Torres,Embarazada,9,5,5,1
+7,Luis Perez,Rojo,8,10,1,1

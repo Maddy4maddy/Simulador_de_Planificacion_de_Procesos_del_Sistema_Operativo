@@ -5,9 +5,17 @@ from styles import EstilosHospital
 
 class VentanaSimulacionPaso:
 
-    def __init__(self, root, controller):
+    def __init__(
+            self,
+            root,
+            controller,
+            ventana_principal,
+            configuracion
+    ):
 
         self.controller = controller
+        self.ventana_principal = ventana_principal
+        self.configuracion = configuracion
 
         self.ventana = tk.Toplevel(root)
         self.ventana.title("Simulación Paso a Paso")
@@ -61,6 +69,29 @@ class VentanaSimulacionPaso:
             padx=10
         )
 
+        self.label_estado_paciente = tk.Label(
+            panel_info,
+            text="Estado del paciente: -",
+            font=("Segoe UI", 12),
+            bg="white"
+        )
+
+        self.label_estado_paciente.pack(
+            anchor="w",
+            padx=10
+        )
+
+        self.label_restante = tk.Label(
+            panel_info,
+            text="Tiempo restante: -",
+            font=("Segoe UI", 12),
+            bg="white"
+        )
+
+        self.label_restante.pack(
+            anchor="w",
+            padx=10
+        )
         self.label_tiempo = tk.Label(
             panel_info,
             text="Tiempo: 0",
@@ -133,9 +164,9 @@ class VentanaSimulacionPaso:
 
     def iniciar(self):
 
-        self.btn.config(
-            state="disabled"
-        )
+        self.btn.config(state="disabled")
+
+        self.progress["value"] = 0
 
         configuracion = {
             "Rojo": "FIFO",
@@ -167,11 +198,31 @@ class VentanaSimulacionPaso:
                 text=f"Paciente actual: {paciente.nombre} (P{paciente.id})"
             )
 
+            self.label_estado_paciente.config(
+                text=f"Estado del paciente: {paciente.estado}"
+            )
+
+            self.label_restante.config(
+                text=f"Tiempo restante: {paciente.tiempo_restante}"
+            )
+
             self.label_tiempo.config(
                 text=f"Tiempo actual: {tiempo}"
             )
 
-            self.progress["value"] = tiempo
+            if timeline:
+
+                ultimo = max(
+                    item["fin"]
+                    for item in timeline
+                )
+
+                self.progress["maximum"] = max(
+                    ultimo,
+                    1
+                )
+
+                self.progress["value"] = tiempo
 
             self.dibujar(timeline)
 
@@ -184,6 +235,18 @@ class VentanaSimulacionPaso:
 
             self.label_estado.config(
                 text="Estado: Simulación Finalizada"
+            )
+
+            self.label_actual.config(
+                text="Paciente actual: Ninguno"
+            )
+
+            self.label_estado_paciente.config(
+                text="Estado del paciente: Todos atendidos"
+            )
+
+            self.label_restante.config(
+                text="Tiempo restante: 0"
             )
 
             self.btn.config(

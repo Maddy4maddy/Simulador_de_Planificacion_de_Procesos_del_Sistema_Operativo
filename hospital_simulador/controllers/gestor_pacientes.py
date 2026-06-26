@@ -101,12 +101,67 @@ class GestorPacientes:
 
     def listar_pacientes(self):
         return self.pacientes
+    
+    def listar_pacientes_disponibles(self):
+        """
+        Devuelve únicamente los pacientes que aún no han sido atendidos.
+        """
+        return [
+            p for p in self.pacientes
+            if p.disponible_para_simulacion()
+        ]
 
     def buscar_por_id(self, id_paciente):
         for p in self.pacientes:
             if p.id == id_paciente:
                 return p
         return None
+    
+    def actualizar_estado(self, id_paciente, nuevo_estado):
+        paciente = self.buscar_por_id(id_paciente)
+
+        if paciente:
+            paciente.estado = nuevo_estado
+            return True
+
+        return False
+    
+    def dar_salida_paciente(self, id_paciente):
+
+        paciente = self.buscar_por_id(id_paciente)
+
+        if paciente is None:
+            return False
+
+        if paciente.estado != Paciente.ESTADO_ATENDIDO:
+            return False
+
+        paciente.dar_salida()
+
+        return True
+    
+    def obtener_pacientes_atendidos(self):
+
+        return [
+            p for p in self.pacientes
+            if p.estado == Paciente.ESTADO_ATENDIDO
+        ]
+    
+    def obtener_pacientes_finalizados(self):
+
+        return [
+            p for p in self.pacientes
+            if p.estado == Paciente.ESTADO_FINALIZADO
+        ]
+    
+    def puede_simular(self, id_paciente):
+
+        paciente = self.buscar_por_id(id_paciente)
+
+        if paciente is None:
+            return False
+
+        return paciente.disponible_para_simulacion()
 
     def obtener_tiquetes(self):
         return self.tiquetes

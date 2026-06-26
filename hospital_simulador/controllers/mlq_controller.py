@@ -1,6 +1,7 @@
 from controllers.fifo_controller import FIFOController
 from controllers.sjf_controller import SJFController
 from controllers.rr_controller import RoundRobinController
+from models.paciente import Paciente
 
 
 class MLQController:
@@ -22,7 +23,9 @@ class MLQController:
         }
 
         for paciente in pacientes:
-            colas[paciente.tipo].append(paciente)
+
+            if paciente.estado == Paciente.ESTADO_ESPERA:
+                colas[paciente.tipo].append(paciente)
 
         return colas
 
@@ -108,6 +111,10 @@ class MLQController:
                     paciente.tiempo_retorno -
                     paciente.rafaga
                 )
+
+                # NUEVO
+                paciente.tiempo_restante = 0
+                paciente.finalizar_atencion()
 
             if gantt_ajustado:
                 tiempo_global = max(

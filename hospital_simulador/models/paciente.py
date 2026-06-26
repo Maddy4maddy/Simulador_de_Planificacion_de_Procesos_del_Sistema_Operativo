@@ -7,6 +7,10 @@ class Paciente:
         "Cita": 1,
         "Seguimiento": 0
     }
+    ESTADO_ESPERA = "Espera"
+    ESTADO_EN_ATENCION = "En atención"
+    ESTADO_ATENDIDO = "Atendido"
+    ESTADO_FINALIZADO = "Finalizado"
     
     def __init__(self, id_paciente, nombre, tipo, tiempo_llegada, rafaga, prioridad=None, gestiones=1):
         self.id = id_paciente
@@ -18,7 +22,7 @@ class Paciente:
         self.tiempo_restante = rafaga
         self.gestiones = gestiones
         self.tiquete = None
-        self.estado = "Espera"
+        self.estado = Paciente.ESTADO_ESPERA
         self.tiempo_espera = 0
         self.tiempo_retorno = 0
         self.tiempo_inicio = None
@@ -39,3 +43,15 @@ class Paciente:
             "tiempo_restante": self.tiempo_restante,
             "estado": self.estado
         }
+    
+    def iniciar_atencion(self):
+        self.estado = Paciente.ESTADO_EN_ATENCION
+
+    def finalizar_atencion(self):
+        self.estado = Paciente.ESTADO_ATENDIDO
+
+    def dar_salida(self):
+        self.estado = Paciente.ESTADO_FINALIZADO
+
+    def disponible_para_simulacion(self):
+        return self.estado == Paciente.ESTADO_ESPERA

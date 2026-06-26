@@ -1,6 +1,7 @@
 from utils.metricas import calcular_metricas
 import copy
 
+
 class FIFOController:
 
     def ejecutar(self, pacientes):
@@ -20,8 +21,13 @@ class FIFOController:
             if tiempo_actual < paciente.tiempo_llegada:
                 tiempo_actual = paciente.tiempo_llegada
 
+            paciente.iniciar_atencion()
+
             paciente.tiempo_inicio = tiempo_actual
-            paciente.tiempo_espera = tiempo_actual - paciente.tiempo_llegada
+            paciente.tiempo_espera = (
+                tiempo_actual -
+                paciente.tiempo_llegada
+            )
 
             tiempo_actual += paciente.rafaga
 
@@ -30,6 +36,9 @@ class FIFOController:
                 paciente.tiempo_fin -
                 paciente.tiempo_llegada
             )
+
+            paciente.tiempo_restante = 0
+            paciente.finalizar_atencion()
 
             gantt.append(
                 (

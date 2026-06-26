@@ -5,12 +5,12 @@ from styles import EstilosHospital
 class VentanaReporteSimulacion:
 
     def __init__(self, root, resultado):
-# Inicializa la ventana del reporte y almacena los resultados producidos por la simulación.
+        # Inicializa la ventana del reporte y almacena los resultados producidos por la simulación.
         self.resultado = resultado
 
         self.ventana = tk.Toplevel(root)
         self.ventana.title("Reporte Final de Simulación")
-        self.ventana.geometry("700x500")
+        self.ventana.geometry("700x600")
         self.ventana.configure(
             bg=EstilosHospital.COLORES["fondo"]
         )
@@ -18,7 +18,7 @@ class VentanaReporteSimulacion:
         self.crear_ui()
 
     def crear_ui(self):
-        #Construye la interfaz gráfica del reporte, mostrando las métricas
+        # Construye la interfaz gráfica del reporte.
 
         EstilosHospital.crear_header(
             self.ventana,
@@ -26,11 +26,9 @@ class VentanaReporteSimulacion:
         )
 
         metricas = self.resultado["metricas"]
-
         pacientes = self.resultado["pacientes"]
 
-        #Organiza los indicadores principales que serán
-        #mostrados al usuario en forma de resumen.
+        # Resumen general de la simulación
         datos = [
             ("Pacientes atendidos", len(pacientes)),
             ("Tiempo promedio de espera", f"{metricas['espera']:.2f}"),
@@ -39,7 +37,6 @@ class VentanaReporteSimulacion:
             ("Tiempo total", metricas["tiempo_total"])
         ]
 
-        #Crea el contenedor principal donde se presentan todas las métricas del reporte.
         frame = tk.Frame(
             self.ventana,
             bg="white"
@@ -51,7 +48,7 @@ class VentanaReporteSimulacion:
             pady=20
         )
 
-        #Genera dinámicamente una fila para cada métrica calculada durante la simulación.
+        # Mostrar métricas
         for texto, valor in datos:
 
             fila = tk.Frame(
@@ -60,7 +57,7 @@ class VentanaReporteSimulacion:
             )
             fila.pack(
                 fill="x",
-                pady=8
+                pady=6
             )
 
             tk.Label(
@@ -79,6 +76,41 @@ class VentanaReporteSimulacion:
                 fg="#8B0000",
                 bg="white"
             ).pack(side="left")
+
+        # Separador
+        tk.Frame(
+            frame,
+            bg="#DDDDDD",
+            height=2
+        ).pack(fill="x", pady=15)
+
+        # Título del detalle
+        tk.Label(
+            frame,
+            text="Detalle de pacientes",
+            font=("Segoe UI", 11, "bold"),
+            fg="#8B0000",
+            bg="white"
+        ).pack(anchor="w", pady=(0, 8))
+
+        # Mostrar información de cada paciente
+        for p in pacientes:
+
+            texto = (
+                f"P{p.id} - {p.nombre} | "
+                f"Estado: {p.estado} | "
+                f"Espera: {p.tiempo_espera} | "
+                f"Retorno: {p.tiempo_retorno}"
+            )
+
+            tk.Label(
+                frame,
+                text=texto,
+                bg="white",
+                anchor="w",
+                justify="left",
+                font=("Segoe UI", 9)
+            ).pack(anchor="w", pady=2)
 
         tk.Button(
             self.ventana,

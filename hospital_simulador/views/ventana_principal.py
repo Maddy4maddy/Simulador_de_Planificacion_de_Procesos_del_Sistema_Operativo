@@ -101,6 +101,7 @@ class VentanaPrincipal:
             ("Guardar en TXT", self.guardar_txt),
             ("Eliminar Paciente", self.abrir_eliminar),
             ("Actualizar Lista", self.actualizar_lista),
+            ("Dar salida", self.dar_salida),
             ("Ver Tiquetes", self.abrir_tiquetes),
             ("Simulación MLQ", self.ejecutar_mlq),
             ("Comparar Algoritmos", self.abrir_comparacion),
@@ -258,8 +259,13 @@ class VentanaPrincipal:
             tags = ()
             if estado == "Espera":
                 tags = ("espera",)
-            elif estado == "Atencion":
+
+            elif estado == "En atención":
                 tags = ("atencion",)
+
+            elif estado == "Atendido":
+                tags = ("finalizado",)
+
             elif estado == "Finalizado":
                 tags = ("finalizado",)
 
@@ -289,9 +295,20 @@ class VentanaPrincipal:
     def actualizar_estadisticas(self):
         #Recalcula y actualiza los indicadores generales mostrados en el panel de estadísticas.
         total = self.gestor.contar_pacientes()
-        en_espera   = sum(1 for p in self.gestor.pacientes if p.estado == "Espera")
-        en_atencion = sum(1 for p in self.gestor.pacientes if p.estado == "Atencion")
-        finalizados = sum(1 for p in self.gestor.pacientes if p.estado == "Finalizado")
+        en_espera = sum(
+            1 for p in self.gestor.pacientes
+            if p.estado == "Espera"
+        )
+
+        en_atencion = sum(
+            1 for p in self.gestor.pacientes
+            if p.estado == "En atención"
+        )
+
+        finalizados = sum(
+            1 for p in self.gestor.pacientes
+            if p.estado in ("Atendido", "Finalizado")
+        )
 
         self.lbl_total.config(text=f"Total: {total}")
         self.lbl_espera.config(text=f"En Espera: {en_espera}")
@@ -369,9 +386,21 @@ class VentanaPrincipal:
         self.historial.guardar_simulacion(resultado["pacientes"], resultado["metricas"])
 
         for p in resultado["pacientes"]:
-            p.estado = "Finalizado"
-            if p.tiquete:
-                p.tiquete.finalizar_atencion()
+
+            original = self.gestor.buscar_por_id(p.id)
+
+            if original:
+
+                original.tiempo_inicio = p.tiempo_inicio
+                original.tiempo_fin = p.tiempo_fin
+                original.tiempo_espera = p.tiempo_espera
+                original.tiempo_retorno = p.tiempo_retorno
+                original.tiempo_restante = 0
+
+                original.finalizar_atencion()
+
+                if original.tiquete:
+                    original.tiquete.finalizar_atencion()
 
         self.actualizar_lista()
         self.abrir_gantt(resultado)
@@ -420,9 +449,19 @@ class VentanaPrincipal:
         VentanaComparacion(self.root, resultado)
 
     def abrir_simulacion_paso(self):
-    #Inicia la simulación paso a paso permitiendo observar el comportamiento detallado del sistema.
         controller = SimulationStepController(self.gestor)
-        VentanaSimulacionPaso(self.root, controller)
+
+        configuracion = {
+            cola: var.get()
+            for cola, var in self.config_mlq_vars.items()
+        }
+
+        VentanaSimulacionPaso(
+            self.root,
+            controller,
+            self,
+            configuracion
+        )
 
     def abrir_historial(self):
         VentanaHistorial(self.root, self.historial)
@@ -457,3 +496,44 @@ class VentanaPrincipal:
                 state="readonly",
                 width=8
             ).pack(side="left", padx=5)
+
+    def dar_salida(self):
+
+            seleccionado = self.tree.selection()
+
+            if not seleccionado:
+
+                messagebox.showwarning(
+                    "Aviso",
+                    "Seleccione un paciente."
+                )
+                return
+
+            valores = self.tree.item(
+                seleccionado[0],
+                "values"
+            )
+
+            id_paciente = int(valores[0])
+
+            paciente = self.gestor.buscar_por_id(id_paciente)
+
+            if paciente is None:
+                return
+
+            if paciente.estado != "Atendido":
+
+                messagebox.showwarning(
+                    "Aviso",
+                    "Solo los pacientes atendidos pueden recibir el alta."
+                )
+                return
+
+            paciente.estado = "Finalizado"
+
+            self.actualizar_lista()
+
+            messagebox.showinfo(
+                "Alta",
+                f"{paciente.nombre} ha recibido el alta."
+            )

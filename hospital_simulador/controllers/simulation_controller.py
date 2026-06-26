@@ -1,6 +1,7 @@
 from controllers.mlq_controller import MLQController
 from utils.metricas import calcular_metricas
 
+
 class SimulationController:
 
     def __init__(self, gestor):
@@ -9,10 +10,21 @@ class SimulationController:
 
     def ejecutar(self, configuracion, quantum=2):
 
-        pacientes = self.gestor.listar_pacientes()
+        # Solo pacientes pendientes
+        pacientes = self.gestor.listar_pacientes_disponibles()
 
         if not pacientes:
-            return {"error": "No hay pacientes para simular"}
+            return {
+                "error": "No hay pacientes pendientes para simular"
+            }
+
+        # Reiniciar métricas para una nueva simulación
+        for paciente in pacientes:
+            paciente.tiempo_restante = paciente.rafaga
+            paciente.tiempo_inicio = None
+            paciente.tiempo_fin = None
+            paciente.tiempo_espera = 0
+            paciente.tiempo_retorno = 0
 
         resultados_mlq = self.mlq.ejecutar(
             pacientes,
@@ -22,32 +34,16 @@ class SimulationController:
 
         resultado = self._unificar_resultados(resultados_mlq)
 
-        # 🔥 calcular métricas
-        tiempo_total = resultado["gantt"][-1][2] if resultado["gantt"] else 0
+        tiempo_total = (
+            resultado["gantt"][-1][2]
+            if resultado["gantt"]
+            else 0
+        )
 
         promedio_espera, promedio_retorno, cpu = calcular_metricas(
             resultado["pacientes"],
             tiempo_total
         )
-
-        print("\n===== DEBUG =====")
-
-        print("TIEMPO TOTAL:", tiempo_total)
-
-        print(
-            "SUMA RAFAGAS:",
-            sum(
-                p.rafaga
-                for p in resultado["pacientes"]
-            )
-        )
-
-        print("\nGANTT")
-
-        for g in resultado["gantt"]:
-            print(g)
-
-        print("=================\n")
 
         resultado["metricas"] = {
             "espera": promedio_espera,
@@ -58,17 +54,17 @@ class SimulationController:
 
         return resultado
 
-
     def _unificar_resultados(self, resultados_mlq):
 
         gantt_global = []
         pacientes_finales = []
 
-        # 🔥 FIX IMPORTANTE (SEGURIDAD)
         if resultados_mlq is None:
-            return {"error": "MLQ devolvió None"}
+            return {
+                "error": "MLQ devolvió None"
+            }
 
-        for tipo, data in resultados_mlq.items():
+        for _, data in resultados_mlq.items():
 
             if not data:
                 continue

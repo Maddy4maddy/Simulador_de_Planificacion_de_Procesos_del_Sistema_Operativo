@@ -25,7 +25,8 @@ class VentanaMetricas:
         labels = [
             ("Tiempo promedio de espera", self.metricas["espera"]),
             ("Tiempo promedio de retorno", self.metricas["retorno"]),
-            ("Utilización CPU (%)", self.metricas["cpu"])
+            ("Utilización CPU (%)", self.metricas["cpu"]),
+            ("Tiempo total de simulación", self.metricas["tiempo_total"])
         ]
 
         for texto, valor in labels:
